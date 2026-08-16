@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ux-app"
-version = "0.1.0"
+version = "0.2.0"
 description = "Host-authored application layer on ux-dom + ux-channel. Components, Actions, any CEK domain."
 readme = "README.md"
 license = { text = "MIT" }

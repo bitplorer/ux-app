@@ -41,6 +41,7 @@ even though they concatenate to the same string.
 ```python
 app.use("search")                       # stamps pairs; doctor red until driven
 app.use("search", driver=search_driver) # stamps + registers the bundled driver
+app.use("effects", driver=effects_driver)  # ui.notice.push / clear
 
 app.domain(
     name="orders",
@@ -62,6 +63,7 @@ driver. Doctor fails a stamped pair with no driver.
 |---------------|------------|----------|
 | `update("cart.badge")` | `("ui.dom", "morph", {target, patch})` | `ui` (default) |
 | `notify("Saved")` | `log.append` + morph of `notices` | never invents `ui.toast` |
+| `notice("Saved")` | `("ui.notice", "push", …)` | `effects` on the stamp + driver |
 | `go("/orders/1")` | `kv.set("ui:nav", …)` + morph | never invents `nav.push` |
 | `Op("search", "hits", …)` | as written | `search` on the stamp + driver |
 | `Op("orders", "status", …)` | as written | product domain on the stamp + driver |

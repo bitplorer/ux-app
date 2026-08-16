@@ -17,10 +17,11 @@ Cores:   ux-dom      Document, Component tree, Tailwind, uxdom create-app
 
 | This library | Not this library |
 |--------------|------------------|
-| App façade, Components, Actions, field State, Layouts | Document, routes, Tailwind (`ux-dom`) |
+| App façade, Components, Actions, field State, Layouts | Document, routes, Tailwind, **UI kit markup** (`ux-dom`) |
 | Macros that expand to domain Ops (`update`, `notify`, `go`) | Cap mint / verify (`cek-host` / Channel) |
 | Domain registration + driver wiring for the product | Peer kernel apply (`ux-peer-kernel` / `cek apply`) |
 | Isolation so app code never imports Channel / CEK | A second wire protocol |
+| Thin `ux_app.ui` re-export + `effects` pack | A second design system |
 
 ## Two runtimes, one law
 

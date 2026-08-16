@@ -104,6 +104,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     p_explain = sub.add_parser("explain", help="Dump Actions, Components, domains, stamp")
 
+    p_add = sub.add_parser("add", help="add ui <Name> — ownable copy of ux-dom UI")
+    p_add.add_argument("kind", choices=["ui"])
+    p_add.add_argument("name")
+    p_add.add_argument("--dest", default="app/components/ui")
+    p_add.add_argument("--force", action="store_true")
+
     args = parser.parse_args(list(argv) if argv is not None else None)
     if args.cmd == "create-app":
         return cmd_create_app(Path(args.path), yes=args.yes, force=args.force)
@@ -115,6 +121,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return cmd_doctor(fail=args.fail)
     if args.cmd == "explain":
         return cmd_explain()
+    if args.cmd == "add":
+        return cmd_add_ui(args.name, dest=Path(args.dest), force=args.force)
     parser.print_help()
     return 2
 
@@ -179,6 +187,40 @@ def cmd_new(kind: str, name: str, *, yes: bool, force: bool) -> int:
     return 0
 
 
+def cmd_add_ui(name: str, *, dest: Path, force: bool) -> int:
+    """Ownable copy. Prefers ux_dom.ui.copy; falls back to a pointer file."""
+    dest.mkdir(parents=True, exist_ok=True)
+    try:
+        from ux_dom.ui.copy import copy_component
+
+        path = copy_component(name, dest_dir=dest, force=force)
+        print(f"wrote {path}")
+        return 0
+    except ImportError:
+        print(
+            "ux-dom is not installed; wrote a pointer. "
+            "Install ux-dom and re-run `uxapp add ui` to copy sources.",
+            file=sys.stderr,
+        )
+        pointer = dest / f"{name.strip().lower().replace('-', '_')}.md"
+        if pointer.exists() and not force:
+            print(f"skip {pointer} (exists; pass --force to overwrite)", file=sys.stderr)
+            return 0
+        pointer.write_text(
+            f"# {name}\n\n"
+            "Ownable copy of a ux-dom UI component.\n\n"
+            "    pip install 'ux-dom @ git+https://github.com/bitplorer/ux-dom.git'\n"
+            f"    uxapp add ui {name} --force\n"
+            f"    # or: uxdom add ui {name}\n",
+            encoding="utf-8",
+        )
+        print(f"wrote {pointer}")
+        return 0
+    except Exception as exc:
+        print(f"add ui failed: {exc}", file=sys.stderr)
+        return 1
+
+
 def cmd_doctor(*, fail: bool) -> int:
     try:
         issues = run_doctor(None, fail=fail)
@@ -201,11 +243,13 @@ def cmd_explain() -> int:
         actions = sorted(all_actions())
     except Exception:
         actions = []
-    bundled = ["search"]
-    try:
-        load_bundled("search")
-    except Exception:
-        bundled = []
+    bundled: list[str] = []
+    for name in ("search", "effects"):
+        try:
+            load_bundled(name)
+            bundled.append(name)
+        except Exception:
+            pass
     print("Actions:")
     print("  " + (", ".join(actions) if actions else "(none registered)"))
     print("Components:")

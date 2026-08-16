@@ -1,0 +1,9 @@
+{
+  "name": "effects",
+  "version": "1.0.0",
+  "driver_hint": "effects",
+  "seed_pairs": [
+    { "ns": "ui.notice", "name": "push" },
+    { "ns": "ui.notice", "name": "clear" }
+  ]
+}

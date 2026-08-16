@@ -204,6 +204,28 @@ class App:
             self.runtime.domains.register_driver(ns, n, fn)
         return self
 
+    def declare_runtime(self, *names: str) -> "App":
+        """Record Document.use plugins (alpine, xelement, …) for doctor UI health."""
+        current = set(self.runtime.declared_runtimes)
+        current.update(n.strip().lower() for n in names if n)
+        self.runtime.declared_runtimes = frozenset(current)
+        return self
+
+    def require_composite(self, *names: str) -> "App":
+        """Tell doctor which kit composites this app actually uses."""
+        current = set(self.runtime.required_composites)
+        current.update(n.strip().lower() for n in names if n)
+        self.runtime.required_composites = frozenset(current)
+        needed = set(self.runtime.required_runtimes)
+        from ux_app.ui_health import COMPOSITE_RUNTIMES
+
+        for name in names:
+            rt = COMPOSITE_RUNTIMES.get(str(name).strip().lower())
+            if rt:
+                needed.add(rt)
+        self.runtime.required_runtimes = frozenset(needed)
+        return self
+
     # -- submit / click / emit -------------------------------------------
 
     def submit(

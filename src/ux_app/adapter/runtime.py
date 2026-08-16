@@ -55,6 +55,9 @@ class LocalRuntime:
         self.components: dict[str, Any] = {}
         self.actions: dict[str, ActionSpec] = {}
         self.app: Any = None
+        self.declared_runtimes: frozenset[str] = frozenset()
+        self.required_runtimes: frozenset[str] = frozenset()
+        self.required_composites: frozenset[str] = frozenset()
         self._refresh_actions()
 
     def _refresh_actions(self) -> None:
@@ -324,3 +327,11 @@ class LocalRuntime:
         self.peer.register_driver("search", "clear", search_driver)
         self.domains.register_driver("search", "hits", search_driver)
         self.domains.register_driver("search", "clear", search_driver)
+
+    def attach_effects_driver(self) -> None:
+        from ux_app.effects import effects_driver
+
+        self.peer.register_driver("ui.notice", "push", effects_driver)
+        self.peer.register_driver("ui.notice", "clear", effects_driver)
+        self.domains.register_driver("ui.notice", "push", effects_driver)
+        self.domains.register_driver("ui.notice", "clear", effects_driver)

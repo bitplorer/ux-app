@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0 — 2026-08-16
+
+S-tier component battery + in-framework radical enhancements. Isolation,
+Cap law, pair identity, and `notify()` S-only expansion are unchanged.
+
+- ux-dom UI kit extended: Slider, Carousel, ToastHost, DatePicker, Chart,
+  TableEmpty / TableCaption, Dialog a11y, Switch thumb, progressive
+  `public_form`. Ownership stays in `ux_dom.ui`.
+- Author DX: `from ux_app.ui import …` re-exports the kit when ux-dom is
+  installed. `uxapp add ui <Name>` copies via `uxdom add ui`.
+- Bundled `effects` DomainPack: `ui.notice.push` / `ui.notice.clear` +
+  `effects_driver`. `notify()` still expands only to S pairs.
+- Doctor UI health: `app.require_composite` / `app.declare_runtime`.
+  Production profile fails undeclared Alpine for Tabs/Dialog/Carousel.
+- Golden paths: checkout follow_up Cap, preview-then-commit search,
+  transactional multi-region `list[Op]`, morph × Alpine coexistence markup.
+- Docs: `COMPONENTS.md`.
+
 ## 0.1.0 — 2026-08-16
 
 Initial public release.

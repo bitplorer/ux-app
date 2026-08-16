@@ -49,6 +49,9 @@ def inspect_app(app: Any) -> list[str]:
             issues.append("production profile requires a durable once-store")
         if not getattr(runtime, "receipts", False) and not getattr(app, "receipts", False):
             issues.append("production profile requires receipts")
+    from ux_app.ui_health import doctor_ui_health
+
+    issues.extend(doctor_ui_health(app))
     return issues
 
 

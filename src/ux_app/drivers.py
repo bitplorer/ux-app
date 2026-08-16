@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from typing import Any, TYPE_CHECKING
 
+from ux_app.effects import effects_driver
+
 if TYPE_CHECKING:
     from ux_app.ops import Op
+
+__all__ = ["search_driver", "effects_driver"]
 
 
 def search_driver(op: "Op", world: Any) -> None:
