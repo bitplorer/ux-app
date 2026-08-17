@@ -282,6 +282,15 @@ class App:
 
         return getattr(self, "_region_uid", None) or DEFAULT_REGION_UID
 
+    @property
+    def state(self) -> Any:
+        """Live Channel state bag after attach(); None offline / in tests.
+
+        Product code prefers Component Session/Client fields. This property
+        is the adapter/test escape hatch — not the day-1 author API.
+        """
+        return getattr(self, "_state", None)
+
     def control(self, action: str, **args: Any) -> dict[str, str]:
         """Mint signed control attrs. Live Channel after attach(); else in-process Cap."""
         from ux_app.adapter.channel import control_attrs
