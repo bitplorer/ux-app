@@ -19,7 +19,7 @@ from ux_app.overlay import (
     select_region,
 )
 from ux_app.preview import preview
-from ux_app.state import Client, Sealed, Store, Transient
+from ux_app.state import Client, Sealed, Session, Store, Transient
 
 __all__ = [
     "App",
@@ -32,6 +32,7 @@ __all__ = [
     "follow_up",
     "preview",
     "Client",
+    "Session",
     "Store",
     "Transient",
     "Sealed",
