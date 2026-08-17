@@ -4,21 +4,18 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from ux_app.errors import ValidationError
+from ux_app.field_planes import field_key, read_field, write_field
 from ux_app.state import FieldSpec, collect_fields
-
-
-def _is_type(annotation: Any, expected: type) -> bool:
-    return annotation is expected or annotation == expected.__name__
-
 
 
 class Component:
     """UI unit with a stable id and render().
 
     Dataclass-style annotated fields default to the session plane.
-    Honor ux-dom Component / ReactiveComponent if the author subclasses
-    those instead — this class is optional.
+    After ``App.attach``, session/sealed fields read and write Channel
+    draft; client fields emit Channel client ops. store/transient stay
+    local (store may mirror ``world.kv``). Get always returns a plain
+    value — never a Channel handle.
     """
 
     id: str = ""
@@ -34,7 +31,6 @@ class Component:
         fields: dict[str, FieldSpec] = getattr(type(self), "__ux_fields__", {})
         for name, spec in fields.items():
             if name in kwargs:
-                # Must go through __setattr__ so sealed ints refuse coerce.
                 setattr(self, name, kwargs[name])
             else:
                 self._values[name] = spec.default
@@ -48,31 +44,28 @@ class Component:
             "clear_dirty",
             "bind_app",
             "field_specs",
+            "field_key",
         }:
             return object.__getattribute__(self, name)
         fields = object.__getattribute__(type(self), "__dict__").get("__ux_fields__")
         if fields and name in fields:
-            return object.__getattribute__(self, "_values").get(name, fields[name].default)
+            return read_field(self, name, fields[name])
         return object.__getattribute__(self, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
         fields: dict[str, FieldSpec] = getattr(type(self), "__ux_fields__", {})
         if name in fields:
-            spec = fields[name]
-            if spec.plane == "sealed" and _is_type(spec.annotation, int) and type(value) is not int:
-                raise ValidationError(
-                    f"sealed field {name!r} must be int, got {type(value).__name__} (no coerce)",
-                    fields={name: "no coerce"},
-                )
-            self._values[name] = value
-            if spec.plane in {"session", "store", "sealed"}:
-                object.__setattr__(self, "_dirty", True)
+            write_field(self, name, fields[name], value)
             return
         object.__setattr__(self, name, value)
 
     @property
     def field_specs(self) -> dict[str, FieldSpec]:
         return getattr(type(self), "__ux_fields__", {})
+
+    def field_key(self, name: str) -> str:
+        specs = getattr(type(self), "__ux_fields__", {}) or {}
+        return field_key(self, name, specs.get(name))
 
     def is_dirty(self) -> bool:
         return bool(getattr(self, "_dirty", False))
