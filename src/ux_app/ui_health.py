@@ -10,11 +10,28 @@ from typing import Any
 
 from ux_app.doctor import PRODUCTION
 
-# Composite stem → required Document.use runtime (None = pure HTML).
+# Elevated chrome is Channel-first. Alpine is last-resort perception only.
+CHANNEL_FIRST_COMPOSITES: frozenset[str] = frozenset(
+    {
+        "tabs",
+        "dialog",
+        "sheet",
+        "carousel",
+        "command",
+        "popover",
+        "dropdown_menu",
+    }
+)
+
+# Composite stem → required Document.use runtime (None = Channel-first / HTML).
 COMPOSITE_RUNTIMES: dict[str, str | None] = {
-    "tabs": "alpine",
-    "dialog": "alpine",
-    "carousel": "alpine",
+    "tabs": None,
+    "dialog": None,
+    "sheet": None,
+    "carousel": None,
+    "command": None,
+    "popover": None,
+    "dropdown_menu": None,
     "toast": None,
     "datepicker": None,
     "chart": None,
@@ -25,10 +42,12 @@ COMPOSITE_RUNTIMES: dict[str, str | None] = {
 
 
 def doctor_ui_health(app: Any) -> list[str]:
-    """Return issues for missing declared runtimes.
+    """Return issues for missing declared runtimes and alpine-for-open.
 
     Undeclared runtimes fail only under a production profile so
     ``App.bind()`` / ``doctor --fail`` stay incremental on the ui profile.
+
+    Alpine-for-open fails when a Channel path exists (elevated Dialog/Tabs/…).
     """
     issues: list[str] = []
     runtime = getattr(app, "runtime", None)
@@ -39,10 +58,17 @@ def doctor_ui_health(app: Any) -> list[str]:
         return issues
     declared = set(getattr(runtime, "declared_runtimes", ()) or ())
     required: set[str] = set(getattr(runtime, "required_runtimes", ()) or ())
+    overrides = getattr(runtime, "composite_runtimes", None) or {}
     for name in getattr(runtime, "required_composites", ()) or ():
-        need = COMPOSITE_RUNTIMES.get(str(name).lower())
-        if need:
-            required.add(need)
+        key = str(name).lower()
+        claimed = overrides.get(key, COMPOSITE_RUNTIMES.get(key))
+        if key in CHANNEL_FIRST_COMPOSITES and claimed == "alpine":
+            issues.append(
+                f"alpine-for-open is forbidden for {key!r} (Channel path exists)"
+            )
+            continue
+        if claimed:
+            required.add(claimed)
     for rt in sorted(required - declared):
         issues.append(f"composite requires undeclared runtime {rt!r}")
     return issues

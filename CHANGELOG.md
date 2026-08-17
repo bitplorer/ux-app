@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Channel-native design system
+
+- Author macros: `open_overlay`, `close_overlay`, `select_region`, `confirm`,
+  `form_result` — exported from `ux_app` and `ux_app.overlay`.
+- Ports/adapters isolate the session key scheme (`ui.overlay.*`, `ui.select.*`).
+  Keys are not on the public package API.
+- Doctor: Channel-first Dialog/Tabs/Carousel/Sheet need no Alpine runtime.
+  Production fails **alpine-for-open** when a Host still claims Alpine as the
+  open/selected path.
+- `ux_app.ui` re-exports new ux-dom stems (Sheet, Command, field_classes, …).
+- Tests: `tests/test_overlay_ports.py`.
+
 ## 0.2.0 — 2026-08-16
 
 S-tier component battery + in-framework radical enhancements. Isolation,

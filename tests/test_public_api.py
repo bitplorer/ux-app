@@ -21,6 +21,11 @@ def test_all_is_small_and_named():
         "Sealed",
         "Badge",
         "__version__",
+        "open_overlay",
+        "close_overlay",
+        "select_region",
+        "confirm",
+        "form_result",
     }
     assert set(ux_app.__all__) == expected
 
