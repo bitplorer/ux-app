@@ -253,6 +253,41 @@ class App:
     def mint(self, action: str, args: dict[str, Any] | None = None) -> str:
         return self.runtime.caps.mint(action, args)
 
+    def attach(self, asgi: Any, **kwargs: Any) -> Any:
+        """Mount the live Channel behind this App.
+
+        Idempotent. No-op (returns None) when ux-channel is not installed
+        or ``asgi`` is None. Product code never imports the Channel.
+        """
+        from ux_app.adapter.channel import attach as attach_wire
+
+        return attach_wire(self, asgi, **kwargs)
+
+    def region(self, render: Any, *, uid: str | None = None) -> "App":
+        """Hand a host render to Channel's Region API (via the adapter).
+
+        Does not invent a second slot type. Channel already owns
+        ``@ch.region`` / ``ch.use`` / ``Region.mount``. This method only
+        stores the callback so product code never imports ux_channel.
+        Default uid is ``app.root``.
+        """
+        self._region_render = render
+        if uid:
+            self._region_uid = uid
+        return self
+
+    @property
+    def region_uid(self) -> str:
+        from ux_app.adapter.channel import DEFAULT_REGION_UID
+
+        return getattr(self, "_region_uid", None) or DEFAULT_REGION_UID
+
+    def control(self, action: str, **args: Any) -> dict[str, str]:
+        """Mint signed control attrs. Live Channel after attach(); else in-process Cap."""
+        from ux_app.adapter.channel import control_attrs
+
+        return control_attrs(self, action, **args)
+
     def click(self, ident: str, method: str | None = None, **args: Any) -> Result:
         """Test helper: mint the control Cap and submit the Component method."""
         spec = self._resolve_click(ident, method)
