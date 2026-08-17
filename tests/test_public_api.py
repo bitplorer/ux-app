@@ -16,6 +16,7 @@ def test_all_is_small_and_named():
         "follow_up",
         "preview",
         "Client",
+        "Session",
         "Store",
         "Transient",
         "Sealed",
