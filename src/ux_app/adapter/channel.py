@@ -17,6 +17,11 @@ from ux_app.errors import DispatchError
 # Default uid follows Channel's dotted app.* pattern (see app.flash).
 DEFAULT_REGION_UID = "app.root"
 
+# Reserved trust key for the multiplexed product action id.
+# MUST stay out of the HTML form namespace — never use plain "name" / "action".
+# Sealed last into the cap so product trust_* args cannot overwrite it.
+UX_ACTION_KEY = "ux_action"
+
 
 def try_channel(*, cek: str = "off", profile: str = "ui") -> Any:
     """Return a presence handle if ux_channel is importable, else None.
@@ -115,15 +120,25 @@ def attach(
     slot = ch.region(slot_uid)(_paint)
 
     @ch.on("ux_app.dispatch", refresh=[slot], idempotent=False)
-    def dispatch(ctx, name: str = "", **args: Any):
-        payload = {k: v for k, v in args.items() if k != "name"}
+    def dispatch(ctx, ux_action: str = "", **args: Any):
+        """Multiplex product actions through one Channel handler.
+
+        The sealed trust key is ``ux_action`` (see ``UX_ACTION_KEY``), not
+        ``name``. Form fields named ``name`` / ``email`` / ``action`` must
+        reach the product handler — they must never collide with the
+        routing key.
+        """
+        reserved = {UX_ACTION_KEY}
+        payload = {k: v for k, v in args.items() if k not in reserved}
         if ctx is not None:
             form = getattr(ctx, "form", None) or getattr(ctx, "data", None) or {}
             if isinstance(form, dict):
                 for key, value in form.items():
-                    if key not in payload and key != "name":
+                    if key in reserved:
+                        continue
+                    if key not in payload:
                         payload[str(key)] = value
-        host.submit(str(name or ""), payload)
+        host.submit(str(ux_action or ""), payload)
         return None
 
     host._wire = ch
@@ -172,17 +187,25 @@ def control_attrs(host: Any, action: Any, **args: Any) -> dict[str, str]:
     ``action`` may be a bound Component method, an ``@action`` function, or a
     string name (escape hatch). Live Channel when ``App.attach`` has run;
     otherwise the in-process Cap. Keys are underscore form for ux-dom.
+
+    The product action id is sealed under ``UX_ACTION_KEY`` (``ux_action``),
+    never under ``name``, so HTML form fields like ``name`` / ``email`` can
+    round-trip through Channel form merge without colliding with routing.
     """
-    name = resolve_action_name(host, action)
+    action_name = resolve_action_name(host, action)
     wire = getattr(host, "_wire", None)
     dispatch = getattr(host, "_dispatch", None)
     if wire is not None and dispatch is not None:
-        trust: dict[str, Any] = {"name": name}
-        trust.update(args)
+        # Product trust args first; reserved key written last so it cannot
+        # be overwritten by an accidental trust_name= / name= kwarg.
+        trust: dict[str, Any] = {
+            k: v for k, v in args.items() if k != UX_ACTION_KEY
+        }
+        trust[UX_ACTION_KEY] = action_name
         return wire.control(dispatch, trust=trust).as_ux_dom()
-    token = host.mint(name, args)
+    token = host.mint(action_name, args)
     return {
-        "data_action": str(name),
+        "data_action": str(action_name),
         "data_cap": token,
         "data_args": json.dumps(args, sort_keys=True, separators=(",", ":"), default=str),
     }

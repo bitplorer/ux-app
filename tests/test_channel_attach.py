@@ -65,3 +65,18 @@ def test_attach_none_is_noop():
 
 def test_isolation_keeps_channel_in_adapter():
     assert scan_imports() == []
+
+
+def test_control_trust_key_is_ux_action_not_name():
+    """Routing key must not collide with HTML form fields like name=."""
+    from ux_app.adapter.channel import UX_ACTION_KEY
+
+    assert UX_ACTION_KEY == "ux_action"
+    assert UX_ACTION_KEY != "name"
+
+
+def test_dispatch_reserved_key_constant():
+    from ux_app.adapter import channel as ch_mod
+
+    assert hasattr(ch_mod, "UX_ACTION_KEY")
+    assert ch_mod.UX_ACTION_KEY == "ux_action"
