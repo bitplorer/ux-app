@@ -1,4 +1,10 @@
-"""Dataclass-style field planes. No Channel / CEK imports."""
+"""Dataclass-style field planes. No Channel / CEK imports.
+
+After ``App.attach``, ``Session`` / ``Sealed`` fields are backed by
+Channel draft and ``Client`` by Channel client ops. ``Store`` may
+mirror ``world.kv``; ``Transient`` stays instance-local. Keys are
+``{component.id}.{field}`` (client uses the allowlist key).
+"""
 
 from __future__ import annotations
 

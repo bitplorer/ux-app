@@ -2,6 +2,8 @@
 
 Product apps never construct Channel or mint channel caps.
 They call ``App.attach(asgi)``, ``App.region(render)``, ``App.control(...)``.
+
+After attach, Channel ``state()`` backs Component Session/Client field planes.
 """
 
 from __future__ import annotations
@@ -54,6 +56,8 @@ def attach(
     """Boot the live Channel *behind* App. Returns the wire or None.
 
     Registers one Region that forwards Actions to ``host.submit``.
+    Attaches Channel SSR ``state()`` so Component Session/Client fields
+    route to draft / client ops.
     Product modules must not call this — use ``App.attach``.
     """
     if region is not None:
@@ -66,6 +70,7 @@ def attach(
         return None
     try:
         from ux_channel import Channel, ChannelConfig
+        from ux_channel import state as channel_state
     except ImportError:
         return None
 
@@ -82,6 +87,10 @@ def attach(
 
     ch = Channel.boot(asgi, config=cfg, path=path)
     slot_uid = getattr(host, "_region_uid", None) or DEFAULT_REGION_UID
+
+    # Component Session/Client fields → Channel draft / client ops.
+    allow = tuple(getattr(getattr(host, "runtime", None), "client_state", ()) or ())
+    host._state = channel_state(ch, allow=allow)
 
     def _paint(ctx=None):
         fn = getattr(host, "_region_render", None)
