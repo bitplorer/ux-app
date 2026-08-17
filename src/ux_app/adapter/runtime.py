@@ -58,6 +58,7 @@ class LocalRuntime:
         self.declared_runtimes: frozenset[str] = frozenset()
         self.required_runtimes: frozenset[str] = frozenset()
         self.required_composites: frozenset[str] = frozenset()
+        self.composite_runtimes: dict[str, str | None] = {}
         self._refresh_actions()
 
     def _refresh_actions(self) -> None:

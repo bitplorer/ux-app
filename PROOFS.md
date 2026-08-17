@@ -47,9 +47,9 @@ Package profile. App-level undriven pairs remain soft at boot (`stamped pair ` p
 | Switch | ux_dom.ui.switch | none | — | Y |
 | Slider | ux_dom.ui.slider | none | — | Y |
 | Table + Empty | ux_dom.ui.table | none | stamp_region | Y |
-| Tabs | ux_dom.ui.tabs | Alpine | — | Y |
-| Dialog | ux_dom.ui.dialog | Alpine | stamp_region | Y |
-| Carousel | ux_dom.ui.carousel | Alpine | stamp_region | Y |
+| Tabs | ux_dom.ui.tabs | Channel | select_region | Y |
+| Dialog | ux_dom.ui.dialog | Channel | open_overlay | Y |
+| Carousel | ux_dom.ui.carousel | Channel | select_region | Y |
 | ToastHost | ux_dom.ui.toast | none (morph) | #notices | Y |
 | DatePicker | ux_dom.ui.datepicker | native | — | Y |
 | Chart | ux_dom.ui.chart | SVG | — | Y |
@@ -66,9 +66,9 @@ Package profile. App-level undriven pairs remain soft at boot (`stamped pair ` p
 - `tests/test_perception_commit.py::test_preview_then_commit`
 - PreviewCall return → dispatch_error (`test_preview_returned_from_action_is_illegal`)
 
-## 8. Morph × XElement / Alpine coexistence
+## 8. Morph × XElement / Channel-first chrome
 
-`test_morph_xelement_contract_markup` — stamped Carousel keeps `data-channel-id` + `x-data`. App code does not implement re-upgrade. Stock `x_element.js` scan remains the only CE runtime.
+`test_morph_xelement_contract_markup` — stamped Carousel keeps `data-channel-id` and has no Alpine `x-data`. App code does not implement re-upgrade. Stock `x_element.js` scan remains the only CE runtime. Overlay macros locked in `tests/test_overlay_ports.py`.
 
 ## 9. Antifragility batteries
 

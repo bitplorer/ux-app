@@ -6,11 +6,12 @@ installed. Ownership does not move.
 
 ```python
 # preferred — ownership in ux-dom
-from ux_dom.ui import Button, Card, Slider, Carousel, ToastHost, DatePicker, Chart
+from ux_dom.ui import Button, Card, Slider, Carousel, ToastHost, DatePicker, Chart, Sheet
 from ux_dom.ui.channel_bridge import stamp_region, live_button, public_form
+from ux_app import open_overlay, close_overlay, select_region, confirm, form_result
 
 # author DX alias (same objects)
-from ux_app.ui import Button, ToastHost
+from ux_app.ui import Button, ToastHost, Sheet
 ```
 
 Ownable copy (kernel untouched):
@@ -21,9 +22,11 @@ uxapp add ui Carousel --dest app/components/ui
 # layers on `uxdom add ui` when ux-dom is installed
 ```
 
-Every component is pure server HTML. Channel is optional. Local chrome
-(tabs / dialog / carousel index) may use Alpine. Authority mutations are
-`Action → list[Op]` under a Cap.
+Every component is pure server HTML. Channel is optional. Elevated Dialog /
+Tabs / Sheet / Carousel are **Channel-first**: open and selected state come
+from session cells set by `open_overlay` / `select_region`. Alpine is
+last-resort perception only — never the default open/selected path.
+Authority mutations are `Action → list[Op]` under a Cap.
 
 ---
 
@@ -74,24 +77,45 @@ Table(
 
 ## Composites
 
-### Tabs / Dialog (Alpine local chrome)
+### Tabs / Dialog / Sheet (Channel-first)
 
 ```python
-Tabs(items=[("a", "Account", div("…")), ("b", "Billing", div("…"))], default="a")
+from ux_app import open_overlay, close_overlay, select_region, confirm
+
+@action("lot.show", caps=())
+def show(ctx, lot_id: str):
+    return open_overlay("dialog", key="lot", lot_id=lot_id)
+
+@action("ui.close", caps=())
+def close(ctx):
+    return close_overlay()
+
+@action("nav.tab", caps=())
+def tab(ctx, tab: str):
+    return select_region("tabs:main", tab)
+
+Tabs(
+    items=[("a", "Account", div("…")), ("b", "Billing", div("…"))],
+    active=world.kv.get("ui.select.tabs.main") or "a",
+    select_action="nav.tab",
+)
 
 Dialog(
-    trigger=Button("Confirm", variant="outline"),
+    open=world.kv.get("ui.overlay.open"),
     title="Pay now",
     body=div("Charge the card on file."),
-    footer=live_button("Pay", action="Checkout.pay", target="Checkout:dialog"),
+    footer=live_button("Pay", action="Checkout.pay", target="overlay"),
 )
 ```
 
-Declare the runtime so production doctor stays green:
+Product Actions must not hard-code `ui.overlay.*` / `ui.select.*` strings —
+those live in `ux_app.adapters` only.
+
+Channel-first composites need no Alpine runtime:
 
 ```python
-app.require_composite("dialog", "tabs")
-app.declare_runtime("alpine")
+app.require_composite("dialog", "tabs", "sheet")
+# do not declare alpine as the open path
 ```
 
 ### Carousel
@@ -101,7 +125,7 @@ Carousel(slides=[div("One"), div("Two")], label="Highlights")
 Carousel(slides=[])  # empty state
 ```
 
-Index is Alpine-only. Server authority uses `stamp_region` + `live_button`.
+Index is a render argument. Advance with `select_region("carousel:hero", "1")`.
 
 ### ToastHost
 
@@ -231,8 +255,9 @@ and undriven.
 
 ```python
 app.require_composite("carousel", "dialog")
-app.declare_runtime("alpine")
-app.doctor(fail=True)   # production profile fails missing alpine
+app.doctor(fail=True)   # Channel-first — no alpine required
+# production fails alpine-for-open if a Host still claims alpine
+# as the Dialog/Tabs/Carousel open path
 ```
 
 Stamped UI pairs without a driver already fail `domains.doctor_issues`.
@@ -250,9 +275,11 @@ Stamped UI pairs without a driver already fail `domains.doctor_issues`.
 | Switch | `ux_dom.ui.switch` | none | — | Y |
 | Slider | `ux_dom.ui.slider` | none | — | Y |
 | Table (+ Empty) | `ux_dom.ui.table` | none | stamp_region | Y |
-| Tabs | `ux_dom.ui.tabs` | Alpine | — | Y |
-| Dialog | `ux_dom.ui.dialog` | Alpine | stamp_region | Y |
-| Carousel | `ux_dom.ui.carousel` | Alpine | stamp_region | Y |
+| Tabs | `ux_dom.ui.tabs` | Channel | `select_region` | Y |
+| Dialog | `ux_dom.ui.dialog` | Channel | `open_overlay` | Y |
+| Sheet | `ux_dom.ui.sheet` | Channel | `open_overlay` | Y |
+| Carousel | `ux_dom.ui.carousel` | Channel | `select_region` | Y |
+| Command | `ux_dom.ui.command` | Channel | `open_overlay` | Y |
 | ToastHost | `ux_dom.ui.toast` | none (morph) | yes (`#notices`) | Y |
 | DatePicker | `ux_dom.ui.datepicker` | native | — | Y |
 | Chart | `ux_dom.ui.chart` | SVG | — | Y |

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from ux_app import App
 from ux_app.doctor import PRODUCTION
-from ux_app.ui_health import COMPOSITE_RUNTIMES, doctor_ui_health
+from ux_app.ui_health import CHANNEL_FIRST_COMPOSITES, COMPOSITE_RUNTIMES, doctor_ui_health
 
 
 def test_ui_profile_does_not_fail_undeclared_runtime():
@@ -12,18 +12,26 @@ def test_ui_profile_does_not_fail_undeclared_runtime():
     assert app.doctor() == []
 
 
-def test_production_fails_undeclared_alpine():
+def test_channel_first_composites_need_no_alpine():
     app = App.bind(profile="production")
-    app.require_composite("carousel")
+    app.require_composite("carousel", "dialog", "tabs", "sheet")
+    issues = [i for i in app.doctor() if "undeclared runtime" in i]
+    assert issues == []
+
+
+def test_production_fails_alpine_for_open_when_channel_path_exists():
+    app = App.bind(profile="production")
+    app.require_composite("dialog")
+    app.runtime.composite_runtimes = {"dialog": "alpine"}
     issues = app.doctor()
-    assert any("undeclared runtime 'alpine'" in i for i in issues)
+    assert any("alpine-for-open" in i and "dialog" in i for i in issues)
 
 
-def test_production_passes_when_declared():
+def test_production_passes_when_alpine_declared_for_other_use():
     app = App.bind(profile="production")
     app.require_composite("carousel", "dialog", "tabs")
     app.declare_runtime("alpine")
-    issues = [i for i in app.doctor() if "undeclared runtime" in i]
+    issues = [i for i in app.doctor() if "undeclared runtime" in i or "alpine-for-open" in i]
     assert issues == []
 
 
@@ -35,6 +43,7 @@ def test_pure_html_composites_need_no_runtime():
 
 
 def test_composite_map_covers_battery():
-    for stem in ("carousel", "dialog", "tabs", "slider", "chart", "toast"):
+    for stem in ("carousel", "dialog", "tabs", "slider", "chart", "toast", "sheet"):
         assert stem in COMPOSITE_RUNTIMES
+    assert CHANNEL_FIRST_COMPOSITES >= {"dialog", "tabs", "carousel", "sheet"}
     assert "production" in PRODUCTION
