@@ -1,4 +1,17 @@
-"""Dataclass-style field planes. No Channel / CEK imports."""
+"""Dataclass-style field planes. No Channel / CEK imports.
+
+Planes (Component fields):
+
+* ``Session``  — UI chrome. After ``App.attach``, backed by Channel draft
+  under key ``{component.id}.{field}``. Offline: instance ``_values``.
+* ``Client``   — browser prefs. Allowlisted path (``key=``). After attach,
+  writes enqueue Channel client ops; server keeps a mirror in ``_values``.
+* ``Store``    — component-local durable-ish values (+ optional world.kv mirror).
+* ``Transient``— this instance/render only; never persisted.
+* ``Sealed``   — strict type (no coerce); local bag.
+
+Channel ``db`` guards are action-time only — not a field plane.
+"""
 
 from __future__ import annotations
 
