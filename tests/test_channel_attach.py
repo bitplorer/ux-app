@@ -23,3 +23,8 @@ def test_attach_none_is_noop():
 
 def test_isolation_keeps_channel_in_adapter():
     assert scan_imports() == []
+
+
+def test_app_state_none_before_attach():
+    app = App.boot(title="Facade", strict=False)
+    assert app.state is None

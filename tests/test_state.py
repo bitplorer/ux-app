@@ -74,3 +74,61 @@ def test_sealed_init_kwargs_no_coerce():
 
     with pytest.raises(ValidationError, match="no coerce"):
         Item(qty="1")
+
+
+def test_field_key_scheme():
+    from ux_app.component import field_key
+    from ux_app.state import Session, Store, Transient
+
+    class Home(Component):
+        id = "home"
+        slide: int = Session(0)
+        note: str = Store("")
+        flash: str = Transient("")
+        theme: str = Client("dark", key="ui.theme")
+
+        def render(self):
+            return str(self.slide)
+
+    h = Home()
+    assert field_key(h, "slide") == "home.slide"
+    assert field_key(h, "note") == "home.note"
+    assert field_key(h, "flash") == "home.flash"
+    assert field_key(h, "theme") == "ui.theme"
+    assert h.field_key("slide") == "home.slide"
+
+
+def test_session_field_offline_is_plain_value():
+    from ux_app.state import Session
+
+    class Home(Component):
+        id = "home"
+        slide: int = Session(0)
+
+        def render(self):
+            return str(self.slide)
+
+    app = App.bind()
+    home = app.add(Home)
+    assert home.slide == 0
+    home.slide = 2
+    assert home.slide == 2
+    assert home.is_dirty()
+    assert app.state is None
+
+
+def test_store_field_mirrors_world_kv():
+    from ux_app.state import Store
+
+    class Desk(Component):
+        id = "desk"
+        label: str = Store("a")
+
+        def render(self):
+            return self.label
+
+    app = App.bind()
+    desk = app.add(Desk)
+    desk.label = "b"
+    assert desk.label == "b"
+    assert app.runtime.peer.world.kv.get("desk.label") == "b"
