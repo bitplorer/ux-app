@@ -81,6 +81,20 @@ def attach(
         cfg = ChannelConfig.development(secret=secret, allow_memory_stores=True)
 
     ch = Channel.boot(asgi, config=cfg, path=path)
+
+    # Session · client façade (Channel state). Product reads fields on
+    # Components; this is the only place ux_channel.state is imported.
+    try:
+        from ux_channel import state as channel_state
+
+        allow = tuple(
+            getattr(getattr(host, "runtime", None), "client_state", ()) or ()
+        )
+        host._state = channel_state(ch, allow=allow)
+    except Exception:
+        # Channel without state module — leave host._state unset.
+        host._state = getattr(host, "_state", None)
+
     slot_uid = getattr(host, "_region_uid", None) or DEFAULT_REGION_UID
 
     def _paint(ctx=None):
