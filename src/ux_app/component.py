@@ -39,8 +39,17 @@ def _read_field(inst: Any, name: str, spec: FieldSpec) -> Any:
         cell = st.session(key, default)
         return cell.get()
 
-    # client / store / transient / sealed: instance mirror (client also
-    # mirrors so SSR first paint stays coherent).
+    if spec.plane == "store" and app is not None:
+        key = field_key(getattr(inst, "id", "") or "", name, spec)
+        runtime = getattr(app, "runtime", None)
+        peer = getattr(runtime, "peer", None)
+        world = getattr(peer, "world", None)
+        kv = getattr(world, "kv", None) if world is not None else None
+        if isinstance(kv, dict) and key in kv:
+            return kv[key]
+
+    # client / transient / sealed: instance mirror (client also mirrors
+    # so SSR first paint stays coherent).
     return default
 
 
