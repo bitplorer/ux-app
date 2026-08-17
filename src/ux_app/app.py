@@ -291,8 +291,12 @@ class App:
         """
         return getattr(self, "_state", None)
 
-    def control(self, action: str, **args: Any) -> dict[str, str]:
-        """Mint signed control attrs. Live Channel after attach(); else in-process Cap."""
+    def control(self, action: str | Callable[..., Any], **args: Any) -> dict[str, str]:
+        """Mint signed control attrs. Live Channel after attach(); else in-process Cap.
+
+        Accepts a bound Component method, an ``@action`` function, or a string
+        name (escape hatch / tests). Product style is ``host.control(cart.add, id=sku)``.
+        """
         from ux_app.adapter.channel import control_attrs
 
         return control_attrs(self, action, **args)

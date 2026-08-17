@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Component Session/Client planes + callable control
+
+- Session/Client/Store field planes bind to Channel state after `App.attach`.
+- `App.state` is the adapter/test escape hatch (None offline).
+- `App.control` accepts a bound Component method or `@action` function;
+  strings remain an escape hatch (`host.control(cart.add, id=sku)`).
+- Isolation unchanged: only `adapter/channel.py` imports `ux_channel`.
+
 ### Channel-native design system
 
 - Author macros: `open_overlay`, `close_overlay`, `select_region`, `confirm`,

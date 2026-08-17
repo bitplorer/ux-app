@@ -6,9 +6,12 @@ They call ``App.attach(asgi)``, ``App.region(render)``, ``App.control(...)``.
 
 from __future__ import annotations
 
+import inspect
 import json
 import os
 from typing import Any, Callable
+
+from ux_app.errors import DispatchError
 
 # Channel speech: one morphable DOM slot is a Region (NAMING.md).
 # Default uid follows Channel's dotted app.* pattern (see app.flash).
@@ -132,12 +135,45 @@ def attach(
     return ch
 
 
-def control_attrs(host: Any, name: str, **args: Any) -> dict[str, str]:
+def resolve_action_name(host: Any, action: Any) -> str:
+    """Turn a bound method / @action function / string into a registered name.
+
+    Product code prefers ``host.control(cart.add, id=sku)``. Strings stay as
+    the escape hatch. Never imports Channel.
+    """
+    if isinstance(action, str):
+        return action
+    if not callable(action):
+        raise DispatchError(f"control target is not an action: {type(action).__name__}")
+
+    existing = getattr(action, "__ux_action__", None)
+    if existing is not None and getattr(existing, "name", None):
+        return str(existing.name)
+
+    if inspect.ismethod(action):
+        ident = getattr(action.__self__, "id", None)
+        if ident:
+            return f"{ident}.{action.__name__}"
+
+    runtime = getattr(host, "runtime", None)
+    if runtime is not None:
+        target_func = getattr(action, "__func__", action)
+        for spec in getattr(runtime, "actions", {}).values():
+            fn = spec.fn
+            if fn is action or getattr(fn, "__func__", fn) is target_func:
+                return spec.name
+
+    raise DispatchError("handler is not a registered Action")
+
+
+def control_attrs(host: Any, action: Any, **args: Any) -> dict[str, str]:
     """Mint control attrs through the App façade.
 
-    Live Channel when ``App.attach`` has run; otherwise the in-process Cap.
-    Keys are underscore form for ux-dom.
+    ``action`` may be a bound Component method, an ``@action`` function, or a
+    string name (escape hatch). Live Channel when ``App.attach`` has run;
+    otherwise the in-process Cap. Keys are underscore form for ux-dom.
     """
+    name = resolve_action_name(host, action)
     wire = getattr(host, "_wire", None)
     dispatch = getattr(host, "_dispatch", None)
     if wire is not None and dispatch is not None:
