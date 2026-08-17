@@ -12,13 +12,88 @@ def _is_type(annotation: Any, expected: type) -> bool:
     return annotation is expected or annotation == expected.__name__
 
 
+def field_key(component_id: str, name: str, spec: FieldSpec) -> str:
+    """Stable key for live session cells: ``{id}.{field}``.
+
+    Client plane uses ``spec.allowlist_key`` (or the field name) as the
+    browser path — not this helper.
+    """
+    ident = (component_id or "").strip() or "component"
+    return f"{ident}.{name}"
+
+
+def _live_state(app: Any) -> Any:
+    if app is None:
+        return None
+    return getattr(app, "_state", None)
+
+
+def _read_field(inst: Any, name: str, spec: FieldSpec) -> Any:
+    values: dict[str, Any] = object.__getattribute__(inst, "_values")
+    default = values.get(name, spec.default)
+    app = object.__getattribute__(inst, "_app")
+    st = _live_state(app)
+
+    if st is not None and spec.plane == "session":
+        key = field_key(getattr(inst, "id", "") or "", name, spec)
+        cell = st.session(key, default)
+        return cell.get()
+
+    # client / store / transient / sealed: instance mirror (client also
+    # mirrors so SSR first paint stays coherent).
+    return default
+
+
+def _write_field(inst: Any, name: str, spec: FieldSpec, value: Any) -> None:
+    values: dict[str, Any] = object.__getattribute__(inst, "_values")
+    app = object.__getattribute__(inst, "_app")
+    st = _live_state(app)
+
+    if spec.plane == "session":
+        if st is not None:
+            key = field_key(getattr(inst, "id", "") or "", name, spec)
+            st.session(key, spec.default).set(value)
+        values[name] = value
+        object.__setattr__(inst, "_dirty", True)
+        return
+
+    if spec.plane == "client":
+        values[name] = value
+        if st is not None:
+            path = spec.allowlist_key or name
+            # Pending browser ops; server mirror is values[name].
+            st.client.set(path, value)
+        return
+
+    if spec.plane == "store":
+        values[name] = value
+        object.__setattr__(inst, "_dirty", True)
+        # Optional world.kv mirror when bound — durable across peer apply.
+        if app is not None:
+            runtime = getattr(app, "runtime", None)
+            peer = getattr(runtime, "peer", None)
+            world = getattr(peer, "world", None)
+            if world is not None and hasattr(world, "kv"):
+                world.kv[field_key(getattr(inst, "id", "") or "", name, spec)] = value
+        return
+
+    if spec.plane == "sealed":
+        values[name] = value
+        object.__setattr__(inst, "_dirty", True)
+        return
+
+    # transient
+    values[name] = value
+
 
 class Component:
     """UI unit with a stable id and render().
 
     Dataclass-style annotated fields default to the session plane.
-    Honor ux-dom Component / ReactiveComponent if the author subclasses
-    those instead — this class is optional.
+    After ``App.attach``, session fields read/write Channel draft via
+    ``{id}.{field}`` keys; client fields enqueue browser ops through
+    Channel's client plane (allowlisted). Offline / tests keep using
+    the in-process ``_values`` bag.
     """
 
     id: str = ""
@@ -52,7 +127,7 @@ class Component:
             return object.__getattribute__(self, name)
         fields = object.__getattribute__(type(self), "__dict__").get("__ux_fields__")
         if fields and name in fields:
-            return object.__getattribute__(self, "_values").get(name, fields[name].default)
+            return _read_field(self, name, fields[name])
         return object.__getattribute__(self, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -64,9 +139,7 @@ class Component:
                     f"sealed field {name!r} must be int, got {type(value).__name__} (no coerce)",
                     fields={name: "no coerce"},
                 )
-            self._values[name] = value
-            if spec.plane in {"session", "store", "sealed"}:
-                object.__setattr__(self, "_dirty", True)
+            _write_field(self, name, spec, value)
             return
         object.__setattr__(self, name, value)
 
