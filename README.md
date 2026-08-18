@@ -82,7 +82,8 @@ MotionChannel())` from **ux-motion**. Channel never learns those ops.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — ownership vs the cores
 - [DOMAINS.md](DOMAINS.md) — adding a pack and a driver
 - [docs/AGENTS.md](docs/AGENTS.md) — maintainer map
-- [docs/STACK_CLEANUP_COUNCIL.md](docs/STACK_CLEANUP_COUNCIL.md) — crossings
+- [docs/STACK_CLEANUP_COUNCIL.md](docs/STACK_CLEANUP_COUNCIL.md) — crossings; **§9 before you change them**
+- [docs/DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md) — locked choices (D2.4 = adapter door)
 
 Frozen CEK words (Cap, Host, Peer, Op, …) keep their meanings.
 See [cek-framework CONCEPTS](https://github.com/bitplorer/cek-framework/blob/main/CONCEPTS.md).

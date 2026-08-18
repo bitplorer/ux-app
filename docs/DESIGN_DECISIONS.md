@@ -60,8 +60,12 @@ wire *shape* and do not import `ux_channel`. Not on `ux_app.__all__`.
 A fifth package (ux-kit / ux-paint) would be a second owner. Surface
 `reply(*effects)` is a banned public name and a second finish API.
 
-**Rejected:** Host-local `glue.js` as the compositor; `ux_channel_ux_motion`
+**Rejected:** Host-local compositor as Glue; `ux_channel_ux_motion`
 as a new repo; teaching Channel `transition.*`.
+
+**Reopen:** see `docs/STACK_CLEANUP_COUNCIL.md` §9. Exporting these on
+`ux_app.__all__`, minting a fifth package, or teaching Channel
+`transition.*` requires a new council entry.
 
 See `docs/STACK_CLEANUP_COUNCIL.md`.
 

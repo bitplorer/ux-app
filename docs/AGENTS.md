@@ -14,6 +14,7 @@ This package is **ux-app** (import `ux_app`, CLI `uxapp`).
 | `src/ux_app/cli/main.py` | `uxapp` — layers on `uxdom`, never fights it |
 | `tests/` | Contract tests. A corner is not absorbed without one |
 | `prompts/` | Council, plan, corners, phase briefs |
+| `docs/STACK_CLEANUP_COUNCIL.md` | Crossings. **Read §9 before changing lower/compose/naming** |
 | `.grok/skills/product-library/` | Playbook. Live bitplorer files win on conflict |
 
 ## Generated

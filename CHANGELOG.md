@@ -11,6 +11,8 @@ Adapter crossings that every Host was rewriting.
   they speak Channel *wire shape*
 - Not exported from `ux_app.__all__` (cold import stays author-only)
 - Isolation, S-pairs, `notify` / `go` / overlay macros unchanged
+- Binding reasons + how to change later:
+  [docs/STACK_CLEANUP_COUNCIL.md](docs/STACK_CLEANUP_COUNCIL.md) (§9)
 
 ## Unreleased
 
