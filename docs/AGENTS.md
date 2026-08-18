@@ -8,6 +8,8 @@ This package is **ux-app** (import `ux_app`, CLI `uxapp`).
 |------|-----|
 | `src/ux_app/*.py` | Author API. Must not import Channel / CEK |
 | `src/ux_app/adapter/*.py` | Only place `ux_channel` / `cek_*` may be imported |
+| `src/ux_app/adapter/lower.py` | `update` → Channel idiomorph wire. No Channel import |
+| `src/ux_app/adapter/compose.py` | Fold Ops + Scenes; XOR law; nav last. No Channel import |
 | `src/ux_app/stdlibs/*.json` | Bundled domain packs |
 | `src/ux_app/cli/main.py` | `uxapp` — layers on `uxdom`, never fights it |
 | `tests/` | Contract tests. A corner is not absorbed without one |
@@ -31,6 +33,8 @@ the golden hand-written cart.
 - Import Channel outside `adapter/`
 - Treat profile as Cap power
 - Scaffold a website
+- Mint a fifth package for Host crossings
+- Put `compose` / `lower_morph` on `ux_app.__all__`
 
 ## Verify
 

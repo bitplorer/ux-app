@@ -86,6 +86,12 @@ Only `src/ux_app/adapter/**` may import `ux_channel` or `cek_*`.
 CEK is reached through Channel's door (`adapter/cek.py`), never by
 importing `cek_surface` from App code.
 
+`adapter.lower_morph` / `adapter.compose` speak Channel wire *shape*
+without importing the package. Hosts call those instead of building
+`{op: morph, morph: idiomorph}` by hand. Full S-pair projection stays
+Channel / CEK `project` — this adapter does not grow a second compiler.
+
+
 ## Production profile
 
 `App.bind(profile="production")` turns on a durable once-store flag

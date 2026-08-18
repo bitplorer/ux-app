@@ -50,6 +50,21 @@
 
 **Rejected:** Putting tokens inside ux-app; putting Channel imports in overlay macros; a third package that owns both markup and Ops.
 
+### D2.4 — lower / compose live in the adapter (2026-08-18)
+**Choice:** Host morph-to-idiomorph and Result folding live in
+`ux_app.adapter.lower_morph` / `ux_app.adapter.compose`. They speak Channel
+wire *shape* and do not import `ux_channel`. Not on `ux_app.__all__`.
+
+**Why:** Every Host was rewriting `{op: morph, morph: idiomorph}` and
+`ch.ui.op(*scene.play()["ops"])`. That is a crossing, not product meaning.
+A fifth package (ux-kit / ux-paint) would be a second owner. Surface
+`reply(*effects)` is a banned public name and a second finish API.
+
+**Rejected:** Host-local `glue.js` as the compositor; `ux_channel_ux_motion`
+as a new repo; teaching Channel `transition.*`.
+
+See `docs/STACK_CLEANUP_COUNCIL.md`.
+
 ### D2.2 — ux_app.ui remains a re-export
 **Choice:** `ux_app.ui` continues to re-export `ux_dom.ui` when ux-dom is installed; ownership of markup does not move.
 

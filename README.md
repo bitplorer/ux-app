@@ -54,12 +54,35 @@ pip install -e .
 - Not a website, React app, or SwiftUI port.
 - Not a place that imports Channel from application code.
 
+## Channel Result crossing
+
+Author code stays on `update` / `notify` / `go`. When a Host must emit a
+Channel `ops[]` (live Peer, or motion on the same Result), use the
+adapter door — not a Host-local dict, not a fifth package:
+
+```python
+from ux_app.adapter import compose, lower_morph
+
+ops = compose(
+    lower_morph("#view", html),   # {op: morph, morph: idiomorph}
+    scene.play(),                 # transition.* — no html on #view
+)
+```
+
+Law on one Result: `morph(T)` XOR `scene.enter(T, html=…)`. Navigate
+kinds are ordered last. `compose` / `lower_morph` speak wire *shape*
+and do not import `ux_channel`. They are not on `ux_app.__all__`.
+
+Play `transition.*` after Channel morph with `document.use(Motion(),
+MotionChannel())` from **ux-motion**. Channel never learns those ops.
+
 ## Docs
 
 - [START.md](START.md) — first morph in five minutes
 - [ARCHITECTURE.md](ARCHITECTURE.md) — ownership vs the cores
 - [DOMAINS.md](DOMAINS.md) — adding a pack and a driver
 - [docs/AGENTS.md](docs/AGENTS.md) — maintainer map
+- [docs/STACK_CLEANUP_COUNCIL.md](docs/STACK_CLEANUP_COUNCIL.md) — crossings
 
 Frozen CEK words (Cap, Host, Peer, Op, …) keep their meanings.
 See [cek-framework CONCEPTS](https://github.com/bitplorer/cek-framework/blob/main/CONCEPTS.md).

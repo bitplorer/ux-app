@@ -1,8 +1,21 @@
 # Changelog
 
+## 0.3.0 — 2026-08-18
+
+Adapter crossings that every Host was rewriting.
+
+- `ux_app.adapter.lower_morph` — `update` → Channel `{op: morph, morph: idiomorph}`
+- `ux_app.adapter.compose` — fold Ops + Scenes + wire dicts; reject
+  `morph(T)` XOR `scene.enter(T, html=)` on one Result; navigate last
+- Neither function imports `ux_channel`. They live in `adapter/` because
+  they speak Channel *wire shape*
+- Not exported from `ux_app.__all__` (cold import stays author-only)
+- Isolation, S-pairs, `notify` / `go` / overlay macros unchanged
+
 ## Unreleased
 
 ### Component Session/Client planes + callable control
+
 
 - Session/Client/Store field planes bind to Channel state after `App.attach`.
 - `App.state` is the adapter/test escape hatch (None offline).
